@@ -1,5 +1,5 @@
 declare var require: any
-import { useEffect, useMemo, MutableRefObject } from 'react'
+import { useEffect, useMemo } from 'react'
 import {
 	DragSourceHookSpec,
 	DragObjectWithType,
@@ -26,9 +26,7 @@ export function useDragHandler<
 	DropResult,
 	CustomProps
 >(
-	spec: MutableRefObject<
-		DragSourceHookSpec<DragObject, DropResult, CustomProps>
-	>,
+	spec: DragSourceHookSpec<DragObject, DropResult, CustomProps>,
 	monitor: DragSourceMonitor,
 	connector: any,
 ) {
@@ -38,7 +36,7 @@ export function useDragHandler<
 	const handler = useMemo(() => {
 		return {
 			beginDrag() {
-				const { begin, item } = spec.current
+				const { begin, item } = spec
 				if (begin) {
 					const beginResult = begin(monitor)
 					invariant(
@@ -50,39 +48,39 @@ export function useDragHandler<
 				return item || {}
 			},
 			canDrag() {
-				if (typeof spec.current.canDrag === 'boolean') {
-					return spec.current.canDrag
-				} else if (typeof spec.current.canDrag === 'function') {
-					return spec.current.canDrag(monitor)
+				if (typeof spec.canDrag === 'boolean') {
+					return spec.canDrag
+				} else if (typeof spec.canDrag === 'function') {
+					return spec.canDrag(monitor)
 				} else {
 					return true
 				}
 			},
 			isDragging(globalMonitor: DragDropMonitor, target) {
-				const { isDragging } = spec.current
+				const { isDragging } = spec
 				return isDragging
 					? isDragging(monitor)
 					: target === globalMonitor.getSourceId()
 			},
 			endDrag() {
-				const { end } = spec.current
+				const { end } = spec
 				if (end) {
 					end(monitor.getItem(), monitor)
 				}
 				connector.reconnect()
 			},
 		} as DragSource
-	}, [])
+	}, [connector, monitor, spec])
 
 	useEffect(function registerHandler() {
 		// console.log('Register Handler')
 		const [handlerId, unregister] = registerSource(
-			spec.current.item.type,
+			spec.item.type,
 			handler,
 			manager,
 		)
 		monitor.receiveHandlerId(handlerId)
 		connector.receiveHandlerId(handlerId)
 		return unregister
-	}, [])
+	}, [connector, handler, manager, monitor, spec])
 }

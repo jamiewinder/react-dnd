@@ -20,7 +20,7 @@ export function useMonitorOutput<Monitor extends HandlerManager, Collected>(
 			})
 			return unsubscribe
 		},
-		[monitor],
+		[monitor, updateCollected],
 	)
 
 	return collected

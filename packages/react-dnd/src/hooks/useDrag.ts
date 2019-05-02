@@ -7,7 +7,7 @@ import {
 } from '../interfaces'
 import { useMonitorOutput } from './internal/useMonitorOutput'
 import { useDragSourceMonitor, useDragHandler } from './internal/drag'
-import { useEffect, useRef, useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 const invariant = require('invariant')
 
 /**
@@ -21,18 +21,16 @@ export function useDrag<
 >(
 	spec: DragSourceHookSpec<DragObject, DropResult, CollectedProps>,
 ): [CollectedProps, ConnectDragSource, ConnectDragPreview] {
-	const specRef = useRef(spec)
-
 	// TODO: wire options into createSourceConnector
 	invariant(spec.item != null, 'item must be defined')
 	invariant(spec.item.type != null, 'item type must be defined')
 
 	const [monitor, connector] = useDragSourceMonitor()
-	useDragHandler(specRef, monitor, connector)
+	useDragHandler(spec, monitor, connector)
 
 	const result: CollectedProps = useMonitorOutput(
 		monitor,
-		specRef.current.collect || (() => ({} as CollectedProps)),
+		spec.collect || (() => ({} as CollectedProps)),
 		() => connector.reconnect(),
 	)
 
@@ -43,12 +41,12 @@ export function useDrag<
 		connector,
 	])
 	useEffect(() => {
-		connector.dragSourceOptions = specRef.current.options || null
+		connector.dragSourceOptions = spec.options || null
 		connector.reconnect()
-	}, [connector])
+	}, [connector, spec])
 	useEffect(() => {
-		connector.dragPreviewOptions = specRef.current.previewOptions || null
+		connector.dragPreviewOptions = spec.previewOptions || null
 		connector.reconnect()
-	}, [connector])
+	}, [connector, spec])
 	return [result, connectDragSource, connectDragPreview]
 }

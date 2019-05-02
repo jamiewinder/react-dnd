@@ -3,7 +3,7 @@ import {
 	DropTargetMonitor,
 	DropTargetHookSpec,
 } from '../../interfaces'
-import { useEffect, useMemo, MutableRefObject } from 'react'
+import { useEffect, useMemo } from 'react'
 import { DropTarget } from 'dnd-core'
 import registerTarget from '../../registerTarget'
 import { useDragDropManager } from './useDragDropManager'
@@ -24,9 +24,7 @@ export function useDropHandler<
 	DropResult,
 	CustomProps
 >(
-	spec: MutableRefObject<
-		DropTargetHookSpec<DragObject, DropResult, CustomProps>
-	>,
+	spec: DropTargetHookSpec<DragObject, DropResult, CustomProps>,
 	monitor: DropTargetMonitor,
 	connector: any,
 ) {
@@ -37,29 +35,29 @@ export function useDropHandler<
 		// console.log('create drop target handler')
 		return {
 			canDrop() {
-				const { canDrop } = spec.current
+				const { canDrop } = spec
 				return canDrop ? canDrop(monitor.getItem(), monitor) : true
 			},
 			hover() {
-				const { hover } = spec.current
+				const { hover } = spec
 				if (hover) {
 					hover(monitor.getItem(), monitor)
 				}
 			},
 			drop() {
-				const { drop } = spec.current
+				const { drop } = spec
 				if (drop) {
 					return drop(monitor.getItem(), monitor)
 				}
 			},
 		} as DropTarget
-	}, [monitor])
+	}, [monitor, spec])
 
 	useEffect(
 		function registerHandler() {
 			// console.log('register droptarget handler')
 			const [handlerId, unregister] = registerTarget(
-				spec.current.accept,
+				spec.accept,
 				handler,
 				manager,
 			)
@@ -67,6 +65,6 @@ export function useDropHandler<
 			connector.receiveHandlerId(handlerId)
 			return unregister
 		},
-		[monitor, connector],
+		[monitor, connector, handler, manager, spec],
 	)
 }
